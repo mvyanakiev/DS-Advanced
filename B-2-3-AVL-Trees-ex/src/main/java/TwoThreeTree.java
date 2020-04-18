@@ -1,6 +1,10 @@
 public class TwoThreeTree<K extends Comparable<K>> {
     private TreeNode<K> root;
 
+    public TwoThreeTree() {
+        this.root = null;
+    }
+
     public static class TreeNode<K> {
         private K leftKey;
         private K rightKey;
@@ -11,6 +15,13 @@ public class TwoThreeTree<K extends Comparable<K>> {
 
         private TreeNode(K key) {
             this.leftKey = key;
+            this.rightKey = null;
+        }
+
+        public TreeNode(K root, K leftValue, K rightValue) {
+            this(root);
+            this.leftChild = new TreeNode<>(leftValue);
+            this.rightChild = new TreeNode<>(rightValue);
         }
 
         boolean isThreeNode() {
@@ -27,7 +38,78 @@ public class TwoThreeTree<K extends Comparable<K>> {
     }
 
     public void insert(K key) {
+        if (this.root == null) {
+            this.root = new TreeNode<>(key);
+            return;
+        }
 
+        TreeNode<K> newRoot = insert(this.root, key);
+
+        if (newRoot != null) {
+            this.root = newRoot;
+        }
+
+    }
+
+    private TreeNode<K> insert(TreeNode<K> node, K key) {
+        if (node.isLeaf()) {
+            if (node.isTwoNode()) {
+                if (node.leftKey.compareTo(key) < 0) {
+                    node.rightKey = key;
+                } else {
+                    node.rightKey = node.leftKey;
+                    node.leftKey = key;
+                }
+
+                return null;
+            }
+
+            K left = node.leftKey;
+            K middle = key;
+            K right = node.rightKey;
+
+            if (key.compareTo(node.leftKey) < 0) {
+                left = key;
+                middle = node.leftKey;
+            } else if (key.compareTo(node.rightKey) > 0) {
+                middle = node.rightKey;
+                right = key;
+            }
+
+            return new TreeNode<>(middle, left, right);
+        }
+
+        TreeNode<K> toFix = null;
+
+        if (node.leftKey.compareTo(key) > 0) {
+            toFix = insert(node.leftChild, key);
+        } else if (node.isTwoNode() && node.leftKey.compareTo(key) < 0) {
+            toFix = insert(node.rightChild, key);
+        } else if (node.isThreeNode() && node.rightKey.compareTo(key) < 0) {
+            toFix = insert(node.rightChild, key);
+        } else {
+            toFix = insert(node.middleChild, key);
+        }
+        if (toFix == null) return null;
+
+        if (node.isTwoNode()) {
+            if (toFix.leftKey.compareTo(node.leftKey) < 0) {
+                node.rightKey = node.leftKey;
+                node.leftKey = toFix.leftKey;
+
+                node.leftChild = toFix.leftChild;
+                node.middleChild = toFix.rightChild;
+            } else {
+                node.rightKey = toFix.leftKey;
+
+                node.middleChild = toFix.leftChild;
+                node.rightChild = toFix.rightChild;
+            }
+
+            return null;
+        }
+        //  1:58:33
+        return null;
     }
 
     public String getAsString() {
