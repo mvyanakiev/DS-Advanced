@@ -125,7 +125,7 @@ public class TwoThreeTree<K extends Comparable<K>> {
             right = new TreeNode<>(node.rightKey, node.middleChild, node.rightChild);
         } else if (toFix.leftKey.compareTo(node.rightKey) > 0) {
             promoteValue = node.rightKey;
-            left = new TreeNode<>(node.leftKey, node.leftChild, node.rightChild);
+            left = new TreeNode<>(node.leftKey, node.leftChild, node.middleChild);
             right = toFix;
         } else {
             promoteValue = toFix.leftKey;
@@ -136,7 +136,7 @@ public class TwoThreeTree<K extends Comparable<K>> {
         return new TreeNode<>(promoteValue, left, right);
     }
 
-    public String getAsString() {
+     public String getAsString() {
         StringBuilder out = new StringBuilder();
         recursivePrint(this.root, out);
         return out.toString().trim();
