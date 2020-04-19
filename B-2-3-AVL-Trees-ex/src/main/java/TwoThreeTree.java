@@ -18,6 +18,13 @@ public class TwoThreeTree<K extends Comparable<K>> {
             this.rightKey = null;
         }
 
+        public TreeNode(K root, TreeNode<K> left, TreeNode<K> right) {
+            this.leftKey = root;
+
+            this.leftChild = left;
+            this.rightChild = right;
+        }
+
         public TreeNode(K root, K leftValue, K rightValue) {
             this(root);
             this.leftChild = new TreeNode<>(leftValue);
@@ -48,7 +55,6 @@ public class TwoThreeTree<K extends Comparable<K>> {
         if (newRoot != null) {
             this.root = newRoot;
         }
-
     }
 
     private TreeNode<K> insert(TreeNode<K> node, K key) {
@@ -108,8 +114,26 @@ public class TwoThreeTree<K extends Comparable<K>> {
 
             return null;
         }
-        //  1:58:33
-        return null;
+
+        K promoteValue = null;
+        TreeNode<K> left = null;
+        TreeNode<K> right = null;
+
+        if (toFix.leftKey.compareTo(node.leftKey) < 0) {
+            promoteValue = node.leftKey;
+            left = toFix;
+            right = new TreeNode<>(node.rightKey, node.middleChild, node.rightChild);
+        } else if (toFix.leftKey.compareTo(node.rightKey) > 0) {
+            promoteValue = node.rightKey;
+            left = new TreeNode<>(node.leftKey, node.leftChild, node.rightChild);
+            right = toFix;
+        } else {
+            promoteValue = toFix.leftKey;
+            left = new TreeNode<>(node.leftKey, node.leftChild, toFix.leftChild);
+            right = new TreeNode<>(node.rightKey, toFix.rightChild, node.rightChild);
+        }
+
+        return new TreeNode<>(promoteValue, left, right);
     }
 
     public String getAsString() {
