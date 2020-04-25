@@ -1,6 +1,9 @@
 import java.util.function.Consumer;
 
 public class RedBlackTree<T extends Comparable<T>> {
+    private static final boolean RED = true;
+    private static final boolean BLACK = false;
+
     private Node<T> root;
 
     public RedBlackTree() {
@@ -37,7 +40,70 @@ public class RedBlackTree<T extends Comparable<T>> {
     //  The difference is that the recursive call should
     //  return Node
     public void insert(T value) {
+        this.root = this.insert(this.root, value);
+        this.root.color = BLACK;
+    }
 
+    private Node<T> insert(Node<T> node, T value) {
+        if(node == null){
+            return new Node<>(value);
+        }
+
+        if(node.value.compareTo(value) > 0){
+            node.left = this.insert(node.left, value);
+        } else if(node.value.compareTo(value) < 0){
+            node.right = this.insert(node.right, value);
+        }
+
+        if(!isRed(node.left) && isRed(node.right)){
+            node = rotateLeft(node);
+        }
+
+        if(isRed(node.left) && isRed(node.left.left)){
+            node = rotateRight(node);
+        }
+        
+        if(isRed(node.left) && isRed(node.right)){
+            node = flipCoors(node);
+        }
+
+        node.count = getNodesCount(node.left) + getNodesCount(node.right) + 1;
+
+        return node;
+    }
+
+    private Node<T> flipCoors(Node<T> node) {
+        node.color = RED;
+        node.left.color = BLACK;
+        node.right.color = BLACK;
+
+        return node;
+    }
+
+    private Node<T> rotateRight(Node<T> node) {
+        Node<T> result = node.left;
+        node.left = result.right;
+        result.right = node;
+
+        result.color = BLACK;
+        node.color = RED;
+
+        return result;
+    }
+
+    private Node<T> rotateLeft(Node<T> node) {  // fixme 1:16:54 - 2 min ?
+        Node<T> result = node.right;
+        node.right = result.left;
+        result.left = node;
+
+        result.color = BLACK;
+        node.color = RED;
+
+        return result;
+    }
+
+    private boolean isRed(Node<T> node) {
+        return node == null ? false : node.isRed();
     }
 
     public boolean contains(T value) {
@@ -82,6 +148,16 @@ public class RedBlackTree<T extends Comparable<T>> {
         private Node<T> right;
         private boolean color;
         private int count;
+
+        public Node(T value) {
+            this.value = value;
+            this.color = RED;
+            this.count = 1;
+        }
+
+        public boolean isRed(){
+            return this.color == RED;
+        }
     }
 }
 
