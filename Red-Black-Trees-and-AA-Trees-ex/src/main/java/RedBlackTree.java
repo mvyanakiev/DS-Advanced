@@ -1,3 +1,4 @@
+import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class RedBlackTree<Key extends Comparable<Key>, Value> {
@@ -131,19 +132,24 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
     }
 
     public void deleteMin() {
-        if (this.isEmpty()){
+        if (this.isEmpty()) {
             throw new IllegalStateException("Tree is empty");
         }
+        if (this.root.left == null) {
+            this.root = null;
+            return;
+        }
+
         this.root = deleteMin(this.root);
     }
 
     // delete the key-value pair with the minimum key rooted at h
     private Node deleteMin(Node h) {
-        if(h.left == null){
+        if (h.left == null) {
             return null;
         }
 
-        if (!isRed(h.left) && !isRed(h.left.left)){
+        if (!isRed(h.left) && !isRed(h.left.left)) {
             h = moveRedLeft(h);
         }
 
@@ -151,20 +157,83 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
         return balance(h);
     }
 
-    public void deleteMax() { //1:44:59
+    public void deleteMax() {
+        if (this.isEmpty()) {
+            throw new IllegalStateException("Tree is empty");
+        }
+        if (this.root.right == null) {
+            this.root = null;
+            return;
+        }
+        root = deleteMax(root);
     }
 
     // delete the key-value pair with the maximum key rooted at h
     private Node deleteMax(Node h) {
-        return null;
+        if (isRed(h.left)) {
+            h = rotateRight(h);
+        }
+
+        if (h.right == null) {
+            return null;
+        }
+
+        if (!isRed(h.right) && !isRed(h.right.right)) {
+            h = moveRedRight(h);
+        }
+
+        h.right = deleteMax(h.right);
+
+        return balance(h);
     }
 
     public void delete(Key key) {
+        if (key == null && isEmpty()) {
+            throw new IllegalStateException("Empty key");
+        }
+        if (!contains(key)) {
+            return;
+        }
+        root = delete(root, key);
+
+        if (!isEmpty()) {
+            root.color = BLACK;
+        }
     }
 
     // delete the key-value pair with the given key rooted at h
     private Node delete(Node h, Key key) {
-        return null;
+        if (h == null) {
+            return null;
+        }
+        int cmp = key.compareTo(h.key);
+
+        if (cmp < 0) {
+            if (!isRed(h.left) && !isRed(h.left.left)) {
+                h = moveRedLeft(h);
+            }
+            h.left = delete(h.left, key);
+        } else {
+            if (isRed(h.left)) {
+                h = rotateRight(h);
+            }
+            if (cmp == 0 && h.right == null) {
+                return null;
+            }
+            if (!isRed(h.right) && !isRed(h.right.right)) {
+                h = moveRedRight(h);
+            }
+            if (cmp == 0) {
+                Node min = min(h.right);
+                h.key = min.key;
+                h.val = min.val;
+                h.right = deleteMin(h.right);
+            } else {
+                h.right = delete(h.right, key);
+            }
+        }
+
+        return balance(h);
     }
 
     private Node rotateRight(Node h) {
@@ -201,7 +270,7 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
     // are black, make h.left or one of its children red.
     private Node moveRedLeft(Node h) {
         flipColors(h);
-        if (isRed(h.right.left)){
+        if (isRed(h.right.left)) {
             h = rotateLeft(h);
             flipColors(h);
         }
@@ -211,18 +280,23 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
     // Assuming that h is red and both h.right and h.right.left
     // are black, make h.right or one of its children red.
     private Node moveRedRight(Node h) {
-        return null;
+        flipColors(h);
+        if (isRed(h.left.left)) {
+            h = rotateRight(h);
+            flipColors(h);
+        }
+        return h;
     }
 
     // restore red-black tree invariant
     private Node balance(Node h) {
-        if (isRed(h.right)){
+        if (isRed(h.right)) {
             h = rotateLeft(h);
         }
-        if (isRed(h.left) && isRed(h.left.left)){
+        if (isRed(h.left) && isRed(h.left.left)) {
             h = rotateRight(h);
         }
-        if (isRed(h.left) && isRed(h.right)){
+        if (isRed(h.left) && isRed(h.right)) {
             flipColors(h);
         }
 
@@ -236,7 +310,7 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
     }
 
     private int height(Node x) {
-        if(x == null){
+        if (x == null) {
             return -1;
         }
         return Math.max(height(x.left), height(x.right)) + 1;
@@ -249,8 +323,8 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
 
     // the smallest key in subtree rooted at x; null if no such key
     private Node min(Node x) {
-        while (x != null){
-            if(x.left == null){
+        while (x != null) {
+            if (x.left == null) {
                 return x;
             }
             x = x.left;
@@ -260,7 +334,7 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
 
     public Key max() {
         Node max = this.max(this.root);
-        if(max == null){
+        if (max == null) {
             return null;
         }
         return max.key;
@@ -268,60 +342,146 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
 
     // the largest key in the subtree rooted at x; null if no such key
     private Node max(Node x) {
-        if(x.right == null){
+        if (x.right == null) {
             return x;
         }
         return max(x.right);
     }
 
     public Key floor(Key key) {
-        return null;
+        Node floor = floor(root, key);
+        if (floor == null){
+            throw new IllegalArgumentException();
+        }
+        return floor.key;
     }
 
     // the largest key in the subtree rooted at x less than or equal to the given key
     private Node floor(Node x, Key key) {
-        return null;
+        if (x == null){
+            return null;
+        }
+
+        int cmp = key.compareTo(x.key);
+
+        if (cmp == 0){
+            return x;
+        }
+
+        if (cmp < 0){
+            return floor(x.left, key);
+        }
+        Node node = floor(x.right, key);
+
+        if (node != null){
+            return node;
+        }
+        return x;
     }
 
     public Key ceiling(Key key) {
-        return null;
+        Node ceiling = ceiling(root, key);
+        if (ceiling == null){
+            return null;
+        }
+        return ceiling.key;
     }
 
     // the smallest key in the subtree rooted at x greater than or equal to the given key
     private Node ceiling(Node x, Key key) {
-        return null;
+        if (x == null){
+            return null;
+        }
+        int cmp = key.compareTo(x.key);
+
+        if (cmp == 0){
+            return x;
+        }
+
+        if (cmp > 0){
+            ceiling(x.right, key);
+        }
+
+        Node node = ceiling(x.left, key);
+
+        if (node != null){
+            return node;
+        }
+        return x;
     }
 
     public Key select(int rank) {
-        return null;
+        return select(root, rank);
     }
 
     // Return key in BST rooted at x of given rank.
     // Precondition: rank is in legal range.
     private Key select(Node x, int rank) {
-        return null;
+        if(x==null){
+            return null;
+        }
+
+        int leftSize = size(x.left);
+
+        if (leftSize > rank){
+            return select(x.left, rank);
+        } else if (leftSize < rank){
+            return select(x.right, rank - leftSize - 1);
+        } else {
+            return x.key;
+        }
     }
 
     public int rank(Key key) {
-        return 0;
+        return rank(root, key);
     }
 
     // number of keys less than key in the subtree rooted at x
-    private int rank(Key key, Node x) {
-        return 0;
+    private int rank(Node x, Key key) {
+        if(x==null){
+            return 0;
+        }
+
+        int cmp = key.compareTo(x.key);
+
+        if (cmp < 0) {
+            return rank(x.left, key);
+        } else if (cmp > 0){
+            return 1 + size(x.left) + rank(x.right, key);
+        } else {
+            return size(x.left);
+        }
     }
 
     public Iterable<Key> keys() {
-        return null;
+        return keys(min(), max());
     }
 
     public Iterable<Key> keys(Key lo, Key hi) {
-        return null;
+        Deque deque = new ArrayDeque();
+        keys(this.root, deque, lo, hi);
+        return deque;
     }
 
     // add the keys between lo and hi in the subtree rooted at x
     // to the queue
     private void keys(Node x, Deque<Key> queue, Key lo, Key hi) {
+        if (x == null) {
+            return;
+        }
+
+        int cmp1 = lo.compareTo(x.key);
+        int cmp2 = hi.compareTo(x.key);
+
+        if (cmp1 < 0) {
+            keys(x.left, queue, lo, hi);
+        }
+        if (cmp1 <= 0 && cmp2 >= 0) {
+            queue.offer(x.key);
+        }
+        if (cmp2 > 0) {
+            keys(x.right , queue, lo, hi);
+        }
     }
 
     public int size(Key lo, Key hi) {
