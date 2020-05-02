@@ -485,7 +485,12 @@ public class RedBlackTree<Key extends Comparable<Key>, Value> {
     }
 
     public int size(Key lo, Key hi) {
-        return 0;
+        int cmp = lo.compareTo(hi);
+
+        if (cmp > 0){
+            return 0;
+        }
+        return rank(hi) - rank(lo);
     }
 
     private boolean check() {
