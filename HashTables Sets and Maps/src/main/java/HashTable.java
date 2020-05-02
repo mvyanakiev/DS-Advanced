@@ -15,7 +15,6 @@ public class HashTable<K, V> implements Iterable<KeyValue<K, V>> {
 
     public HashTable(int capacity) {
         this.slots = new LinkedList[capacity];
-
         this.count = 0;
         this.capacity = capacity;
     }
@@ -24,7 +23,6 @@ public class HashTable<K, V> implements Iterable<KeyValue<K, V>> {
         this.growIfNeeded();
 
         int index = findSlotNumber(key);
-
         LinkedList<KeyValue<K, V>> list = this.slots[index];
 
         if (list == null) {
@@ -192,7 +190,6 @@ public class HashTable<K, V> implements Iterable<KeyValue<K, V>> {
     private class HashIterator implements Iterator<KeyValue<K, V>> {
         Deque<KeyValue<K, V>> elements;
 
-
         HashIterator() {
             this.elements = new ArrayDeque<>();
 
@@ -213,11 +210,7 @@ public class HashTable<K, V> implements Iterable<KeyValue<K, V>> {
             if (!hasNext()) {
                 throw new IllegalArgumentException("Empty table");
             }
-
             return elements.poll();
         }
-
-
     }
-
 }
