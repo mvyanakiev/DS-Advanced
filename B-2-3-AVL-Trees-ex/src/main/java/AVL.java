@@ -21,6 +21,22 @@ public class AVL<T extends Comparable<T>> {
         this.root = this.insert(this.root, item);
     }
 
+    private Node<T> insert(Node<T> node, T item) {
+        if (node == null) {
+            return new Node<>(item);
+        }
+
+        int cmp = item.compareTo(node.value);
+        if (cmp < 0) {
+            node.left = this.insert(node.left, item);
+        } else if (cmp > 0) {
+            node.right = this.insert(node.right, item);
+        }
+
+        this.updateHeight(node);
+        return balance(node);
+    }
+
     public void eachInOrder(Consumer<T> consumer) {
         this.eachInOrder(this.root, consumer);
     }
@@ -107,23 +123,6 @@ public class AVL<T extends Comparable<T>> {
         this.eachInOrder(node.left, action);
         action.accept(node.value);
         this.eachInOrder(node.right, action);
-    }
-
-    private Node<T> insert(Node<T> node, T item) {
-        if (node == null) {
-            return new Node<>(item);
-        }
-
-        int cmp = item.compareTo(node.value);
-        if (cmp < 0) {
-            node.left = this.insert(node.left, item);
-        } else if (cmp > 0) {
-            node.right = this.insert(node.right, item);
-        }
-
-        this.updateHeight(node);
-
-        return balance(node);
     }
 
     private T getMin(Node<T> node) {
