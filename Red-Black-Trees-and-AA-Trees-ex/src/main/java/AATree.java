@@ -57,12 +57,10 @@ class AATree<T extends Comparable<T>> {
             return node;
         }
 
-        Node<T> result = node.right;
-        result.left = node;
-        node.right = null;
-        result.level++;
-
-        return result;
+        Node<T> k2 = node.right;
+        node.right = k2.left;
+        k2.left = node;
+        return k2;
     }
 
     private Node<T> skew(Node<T> node) {
@@ -70,14 +68,10 @@ class AATree<T extends Comparable<T>> {
             return node;
         }
 
-        if (node.level == node.left.level) {
-            Node<T> result = node.left;
-            result.right = node;
-            node.left = null;
-
-            node = result;
-        }
-        return node;
+        Node<T> k1 = node.left;
+        node.left = k1.right;
+        k1.right = node;
+        return k1;
     }
 
     public int countNodes() {
@@ -108,31 +102,20 @@ class AATree<T extends Comparable<T>> {
     }
 
     public void preOrder(Consumer<T> consumer) {
-        this.preOrder(this.root, consumer );
+        this.eachPreOrder(this.root, consumer );
     }
-
-    public void preOrder(Node<T> node, Consumer<T> consumer){
-        if (node == null){
-            return;
-        }
-
-        consumer.accept(node.value);
-        this.preOrder(node.left, consumer);
-        this.preOrder(node.right, consumer);
-    }
-
 
     public void postOrder(Consumer<T> consumer) {
-        this.postOrder(this.root, consumer);
+        this.eachPostOrder(this.root, consumer);
     }
 
-    public void postOrder(Node<T> node, Consumer<T> consumer){
+    public void eachPostOrder(Node<T> node, Consumer<T> consumer){
         if (node == null){
             return;
         }
 
-        this.postOrder(node.left, consumer);
-        this.postOrder(node.right, consumer);
+        this.eachPostOrder(node.left, consumer);
+        this.eachPostOrder(node.right, consumer);
         consumer.accept(node.value);
     }
 
@@ -144,6 +127,15 @@ class AATree<T extends Comparable<T>> {
         this.eachInOrder(node.left, consumer);
         consumer.accept(node.value);
         this.eachInOrder(node.right, consumer);
-//        consumer.accept(node.value);
+    }
+
+    public void eachPreOrder(Node<T> node, Consumer<T> consumer){
+        if (node == null){
+            return;
+        }
+
+        consumer.accept(node.value);
+        this.eachPreOrder(node.left, consumer);
+        this.eachPreOrder(node.right, consumer);
     }
 }
