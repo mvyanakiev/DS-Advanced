@@ -54,17 +54,23 @@ class AATree<T extends Comparable<T>> {
 
     private Node<T> split(Node<T> node) {
         if (node.right == null || node.right.right == null) {
+
             return node;
         }
 
+//        if (node.right.right.level == node.level) {
         Node<T> k2 = node.right;
         node.right = k2.left;
         k2.left = node;
+        k2.level++;
+
         return k2;
     }
 
     private Node<T> skew(Node<T> node) {
         if (node.left == null) {
+
+//        if( node.left.level == node.level ){
             return node;
         }
 
@@ -102,15 +108,15 @@ class AATree<T extends Comparable<T>> {
     }
 
     public void preOrder(Consumer<T> consumer) {
-        this.eachPreOrder(this.root, consumer );
+        this.eachPreOrder(this.root, consumer);
     }
 
     public void postOrder(Consumer<T> consumer) {
         this.eachPostOrder(this.root, consumer);
     }
 
-    public void eachPostOrder(Node<T> node, Consumer<T> consumer){
-        if (node == null){
+    public void eachPostOrder(Node<T> node, Consumer<T> consumer) {
+        if (node == null) {
             return;
         }
 
@@ -119,8 +125,8 @@ class AATree<T extends Comparable<T>> {
         consumer.accept(node.value);
     }
 
-    public void eachInOrder(Node<T> node, Consumer<T> consumer){
-        if (node == null){
+    public void eachInOrder(Node<T> node, Consumer<T> consumer) {
+        if (node == null) {
             return;
         }
 
@@ -129,8 +135,8 @@ class AATree<T extends Comparable<T>> {
         this.eachInOrder(node.right, consumer);
     }
 
-    public void eachPreOrder(Node<T> node, Consumer<T> consumer){
-        if (node == null){
+    public void eachPreOrder(Node<T> node, Consumer<T> consumer) {
+        if (node == null) {
             return;
         }
 
