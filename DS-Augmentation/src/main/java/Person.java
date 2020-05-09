@@ -63,10 +63,7 @@ public class Person implements Comparable<Person> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Person person = (Person) o;
-        return age == person.age &&
-                Objects.equals(name, person.name) &&
-                Objects.equals(email, person.email) &&
-                Objects.equals(town, person.town);
+        return this.email.equals(person.getEmail());
     }
 
     @Override
