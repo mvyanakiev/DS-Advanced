@@ -1,3 +1,5 @@
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Objects;
 
 public class Product implements Comparable<Product> {
@@ -61,5 +63,24 @@ public class Product implements Comparable<Product> {
     @Override
     public int hashCode() {
         return Objects.hash(name, price, producer);
+    }
+
+    @Override
+    public String toString(){
+        DecimalFormat df = new DecimalFormat("#.00");
+        DecimalFormatSymbols dfs = df.getDecimalFormatSymbols();
+        dfs.setDecimalSeparator('.');
+        df.setDecimalFormatSymbols(dfs);
+
+        String formatedPrice = df.format(this.getPrice());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("{")
+                .append(this.getName()).append(";")
+                .append(this.getProducer()).append(";")
+                .append(formatedPrice)
+                .append("}");
+
+        return sb.toString().trim();
     }
 }
