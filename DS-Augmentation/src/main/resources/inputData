@@ -37,16 +37,17 @@ AddProduct CLS 63 AMG;200000.34;Mercedes
 AddProduct CLS 63 AMG;200000.11;Mercedes
 DeleteProducts CLS 63 AMG;asd
 
-8
+10
 AddProduct IdeaPad Z560;1536.50;Lenovo
 AddProduct ThinkPad T410;3000;Lenovo
 AddProduct VAIO Z13;4099.99;Sony
 AddProduct CLS 63 AMG;20000.56;Mercedes
-AddProduct CLS 64 AMG;20000;Mercedes
+AddProduct CLS 63 AMG;20000;Mercedes
 AddProduct CLS AMG;20000;Mercedes
 AddProduct CLS 66;20000;Mercedes
-FindProductsByPriceRange 3500;21000
-
+FindProductsByPriceRange 3500;210000
+DeleteProducts CLS 63 AMG;Mercedes
+FindProductsByProducer Mercedes
 
 17
 AddProduct IdeaPad Z560;1536.50;Lenovo
@@ -71,3 +72,12 @@ FindProductsByName CLS 63 AMG
 AddProduct CLS 63 AMG;200000;Mercedes
 FindProductsByPriceRange 100000;200000
 DeleteProducts Beer;Ariana
+
+7
+AddProduct CLS;21000;Mercedes
+AddProduct CLS;22000;Mercedes2
+AddProduct CLS;23000;Mercedes3
+AddProduct CLS;24000;Mercedes4
+FindProductsByProducer Mercedes
+DeleteProducts Mercedes2
+FindProductsByProducer Mercedes2

@@ -72,13 +72,11 @@ public class Product implements Comparable<Product> {
         dfs.setDecimalSeparator('.');
         df.setDecimalFormatSymbols(dfs);
 
-        String formatedPrice = df.format(this.getPrice());
-
         StringBuilder sb = new StringBuilder();
         sb.append("{")
                 .append(this.getName()).append(";")
                 .append(this.getProducer()).append(";")
-                .append(formatedPrice)
+                .append(df.format(this.getPrice()))
                 .append("}");
 
         return sb.toString().trim();

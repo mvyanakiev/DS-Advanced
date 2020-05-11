@@ -1,12 +1,10 @@
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ShoppingCentre {
     private Set<Product> products;
     private Map<String, SortedSet<Product>> productsByProducer;
     private Map<String, SortedSet<Product>> productsByName;
-    private TreeMap<Double, List<Product>> productsByPrice;
-
+    private TreeMap<Double, LinkedHashSet<Product>> productsByPrice;
 
     public ShoppingCentre() {
         this.products = new HashSet<>();
@@ -16,7 +14,6 @@ public class ShoppingCentre {
     }
 
     public String addProduct(String name, double price, String producer) {
-
         Product product = new Product(name, price, producer);
 
         if (this.products.add(product)) {
@@ -26,7 +23,7 @@ public class ShoppingCentre {
             this.productsByName.putIfAbsent(name, new TreeSet<>(Comparator.comparingDouble(Product::getPrice)));
             this.productsByName.get(name).add(product);
 
-            this.productsByPrice.putIfAbsent(price, new ArrayList<>());
+            this.productsByPrice.putIfAbsent(price, new LinkedHashSet<Product>());
             this.productsByPrice.get(price).add(product);
 
             return "Product added" + System.lineSeparator();
@@ -34,8 +31,6 @@ public class ShoppingCentre {
             return "";
         }
     }
-
-    //todo delete from productsByPrice
 
     public String delete(String name, String producer) {
         Set<Product> removeByName = this.productsByName.remove(name);
@@ -46,6 +41,10 @@ public class ShoppingCentre {
         if (removeByName != null && removeByProducer != null) {
             this.products.removeAll(removeByName);
             this.products.removeAll(removeByProducer);
+
+            Set<Product> productsToRemove = new HashSet<>(removeByName);
+            productsToRemove.addAll(removeByProducer);
+            removeFromProductByPrice(productsToRemove);
         }
 
         size = size - this.products.size();
@@ -69,6 +68,8 @@ public class ShoppingCentre {
                 productsByNameToRemove.removeAll(productsToRemove);
             }
 
+            removeFromProductByPrice(productsToRemove);
+
             return size + " products deleted" + System.lineSeparator();
         }
         return "No products found" + System.lineSeparator();
@@ -85,29 +86,14 @@ public class ShoppingCentre {
     }
 
     public String findProductsByPriceRange(double priceFrom, double priceTo) {
-
-//        double start = Double.valueOf(priceFrom);
-//        double end = Double.valueOf(priceTo);
-
-
-//        SortedMap<Double, SortedSet<Product>> doubleSortedSetSortedMap = this.productsByPrice
-//                .subMap(priceFrom, true, priceTo, true);
-
-        SortedMap<Double, List<Product>> doubleSortedSetSortedMap = this.productsByPrice
+        NavigableMap<Double, LinkedHashSet<Product>> doubleSortedSetSortedMap = this.productsByPrice
                 .subMap(priceFrom, true, priceTo, true);
-
 
         StringBuilder sb = new StringBuilder();
 
         if (doubleSortedSetSortedMap != null) {
-
-            for (List<Product> set : doubleSortedSetSortedMap.values()) {
-//                generateProductsList(set);
-
-                for (Product product : set) {
-                    sb.append(product.toString());
-                    sb.append(System.lineSeparator());
-                }
+            for (LinkedHashSet<Product> set : doubleSortedSetSortedMap.values()) {
+                sb.append(generateProductsList(set));
             }
         } else {
             sb.append("No products found").append(System.lineSeparator());
@@ -126,5 +112,11 @@ public class ShoppingCentre {
             sb.append("No products found").append(System.lineSeparator());
         }
         return sb.toString();
+    }
+
+    private void removeFromProductByPrice(Set<Product> productsToRemove) {
+        for (Product product : productsToRemove) {
+            this.productsByPrice.get(product.getPrice()).remove(product);
+        }
     }
 }
