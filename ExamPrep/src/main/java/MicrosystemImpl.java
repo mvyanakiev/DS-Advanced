@@ -1,7 +1,10 @@
+import java.util.TreeMap;
+
 public class MicrosystemImpl implements Microsystem {
+        private TreeMap<Integer, Computer> computers;
 
     public MicrosystemImpl() {
-
+        this.computers = new TreeMap<>();
     }
 
     @Override
@@ -11,12 +14,12 @@ public class MicrosystemImpl implements Microsystem {
 
     @Override
     public boolean contains(int number) {
-        throw new UnsupportedOperationException();
+       return this.computers.containsKey(number);
     }
 
     @Override
     public int count() {
-        throw new UnsupportedOperationException();
+        return this.computers.size();
     }
 
     @Override
