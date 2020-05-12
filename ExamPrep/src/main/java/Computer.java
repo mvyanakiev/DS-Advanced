@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class Computer {
 
     private static final int DEFAULT_RAM_VALUE = 8;
@@ -67,4 +69,20 @@ public class Computer {
         this.RAM = RAM;
     }
 
+    public int compareTo(Computer other) {
+        return Integer.compare(other.number, this.number);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Computer computer = (Computer) o;
+        return this.number == computer.getNumber();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(number, price, screenSize);
+    }
 }
