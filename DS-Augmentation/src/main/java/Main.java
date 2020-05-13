@@ -22,7 +22,7 @@ public class Main {
         System.out.println(builder.toString());
     }
 
-    private static void executeCommand(ShoppingCentre shoppingCentre, StringBuilder builder, String command, String[] params) {
+    public static void executeCommand(ShoppingCentre shoppingCentre, StringBuilder builder, String command, String[] params) {
         switch (command) {
             case "AddProduct": {
                 String name = params[0];
