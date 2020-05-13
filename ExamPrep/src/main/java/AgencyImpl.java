@@ -3,10 +3,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AgencyImpl implements Agency {
-    private Map<String, Invoice> invoices;
+    private Map<String, Invoice> all;
+    private Set<Invoice> payed;
+    private Map<LocalDate, Map<String, Invoice>> dueDates;
 
     public AgencyImpl() {
-        this.invoices = new HashMap<>();
+        this.all = new HashMap<>();
+        this.payed = new HashSet<>();
+        this.dueDates = new HashMap<>();
     }
 
     @Override
@@ -15,154 +19,146 @@ public class AgencyImpl implements Agency {
             throw new IllegalArgumentException();
         }
 
-        this.invoices.put(invoice.getNumber(), invoice);
+        this.all.put(invoice.getNumber(), invoice);
+
+        Map<String, Invoice> currentByDate = this.dueDates.get(invoice.getDueDate());
+
+        if(currentByDate == null){
+            currentByDate = new HashMap<>();
+        }
+
+        currentByDate.put(invoice.getNumber(), invoice);
+        this.dueDates.put(invoice.getDueDate(), currentByDate);
     }
 
     @Override
     public boolean contains(String number) {
-        if (this.invoices.containsKey(number)) {
-            return true;
-        }
-        return false;
+        return this.all.containsKey(number);
     }
 
     @Override
     public int count() {
-        return this.invoices.size();
+        return this.all.size();
     }
 
     @Override
     public void payInvoice(LocalDate dueDate) {
-        int count = 0;
-
-        for (Invoice invoice : invoices.values()) {
-            if (invoice.getDueDate().equals(dueDate)) {
-                invoice.setSubtotal(0);
-                count++;
-            }
-        }
-
-        if (count == 0) {
+        if(!this.dueDates.containsKey(dueDate)){
             throw new IllegalArgumentException();
         }
+
+        Map<String, Invoice> atDate = this.dueDates.get(dueDate);
+        atDate.forEach((k, v) -> {
+            v.setSubtotal(0);
+            this.payed.add(v);
+            this.all.put(k, v);
+        });
+
+        this.dueDates.put(dueDate, atDate);
     }
 
     @Override
     public void throwInvoice(String number) {
-        if (!this.contains(number)) {
+        Invoice invoice = this.all.get(number);
+
+
+        if (invoice == null) {
             throw new IllegalArgumentException();
         }
 
-        this.invoices.remove(number);
+        this.dueDates.get(invoice.getDueDate()).remove(invoice.getNumber());
+        this.all.remove(number);
     }
 
     @Override
     public void throwPayed() {
-        for (Invoice invoice : invoices.values()) {
-            if (invoice.getSubtotal() == 0) {
-                this.throwInvoice(invoice.getNumber());
-            }
-        }
+        this.payed.forEach(invoice -> {
+            this.dueDates.get(invoice.getDueDate()).remove(invoice.getNumber());
+            this.all.remove(invoice.getNumber());
+        });
+
+        this.payed.clear();
     }
 
     @Override
     public Iterable<Invoice> getAllInvoiceInPeriod(LocalDate startDate, LocalDate endDate) {
-
-        List<Invoice> result = new ArrayList<>();
-
-        result = this.invoices.values()
+        return this.all
+                .values()
                 .stream()
                 .filter(i -> (i.getIssueDate().isAfter(startDate) || i.getIssueDate().equals(startDate)) &&
                         i.getIssueDate().isBefore(endDate) || i.getIssueDate().equals(endDate))
-                .sorted(Comparator.comparing(Invoice::getIssueDate)
-                        .thenComparing(Invoice::getDueDate))
+                .sorted(Comparator.comparing(Invoice::getIssueDate).thenComparing(Invoice::getDueDate))
                 .collect(Collectors.toUnmodifiableList());
-
-        return result;
     }
 
     @Override
     public Iterable<Invoice> searchByNumber(String number) {
+        List<Invoice> result = this.all
+                .values()
+                .stream()
+                .filter(invoice -> invoice.getNumber().contains(number))
+                .collect(Collectors.toUnmodifiableList());
 
-        List<Invoice> result = new ArrayList<>();
-
-        for (Invoice invoice : this.invoices.values()) {
-            if (invoice.getNumber().contains(number)) {
-                result.add(invoice);
-            }
-        }
-
-        if (result.size() > 0) {
-            return result;
-        } else {
+        if (result.isEmpty()){
             throw new IllegalArgumentException();
         }
+        return result;
     }
 
     @Override
     public Iterable<Invoice> throwInvoiceInPeriod(LocalDate startDate, LocalDate endDate) {
+        List<Invoice> result = this.all
+                .values()
+                .stream()
+                .filter(i -> i.getDueDate().isAfter(startDate) && i.getDueDate().isBefore(endDate))
+                .collect(Collectors.toUnmodifiableList());
 
-        List<Invoice> result = new ArrayList<>();
-
-        for (Invoice invoice : this.invoices.values()) {
-            if (
-                    (invoice.getDueDate().isAfter(startDate) || invoice.getDueDate().equals(startDate))
-                            && (invoice.getDueDate().isBefore(endDate) || invoice.getDueDate().equals(endDate))
-            ) {
-                this.invoices.remove(invoice.getNumber());
-                result.add(invoice);
-            }
-        }
-
-        if (result.size() > 0) {
-            return result;
-        } else {
+        if (result.isEmpty()){
             throw new IllegalArgumentException();
         }
 
+        result.forEach(invoice -> {
+            this.all.remove(invoice.getNumber());
+            this.dueDates.get(invoice.getDueDate()).remove(invoice.getNumber());
+        });
+
+        return result;
     }
 
     @Override
     public Iterable<Invoice> getAllFromDepartment(Department department) {
-        List<Invoice> result = new ArrayList<>();
-
-        result = this.invoices.values()
+        return this.all
+                .values()
                 .stream()
                 .filter(i -> i.getDepartment().equals(department))
-                .sorted((a,b) -> Double.compare(b.getSubtotal(), a.getSubtotal()))
-                .sorted(Comparator.comparingLong(a -> a.getIssueDate().toEpochDay()))
-                .collect(Collectors.toUnmodifiableList());
+                .sorted((l, r) -> {
+                    int subtotalResult = Double.compare(r.getSubtotal(), l.getSubtotal());
 
-        return result;
+                    if (subtotalResult == 0){
+                        return l.getIssueDate().compareTo(r.getIssueDate());
+                    } else {
+                        return subtotalResult;
+                    }
+                })
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Override
     public Iterable<Invoice> getAllByCompany(String companyName) {
-        List<Invoice> result = new ArrayList<>();
-
-        result = this.invoices.values()
+        return this.all
+                .values()
                 .stream()
                 .filter(i -> i.getCompanyName().equals(companyName))
-                .sorted((a,b) -> b.getNumber().compareTo(a.getNumber()))
+                .sorted((l,r) -> r.getNumber().compareTo(l.getNumber()))
                 .collect(Collectors.toUnmodifiableList());
-
-        return result;
     }
 
     @Override
     public void extendDeadline(LocalDate endDate, int days) {
-        int count = 0;
-
-        for (Invoice invoice : invoices.values()) {
-            if(invoice.getDueDate().equals(endDate)){
-                invoice.setDueDate(endDate.plusDays(days));
-                count++;
-            }
-        }
-
-        if (count == 0){
+        if(!this.dueDates.containsKey(endDate)){
             throw new IllegalArgumentException();
         }
 
+        this.dueDates.get(endDate).forEach((k, v) -> v.getDueDate().plusDays(days));
     }
 }
