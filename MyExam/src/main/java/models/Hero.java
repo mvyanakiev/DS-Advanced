@@ -1,5 +1,7 @@
 package models;
 
+import java.util.Objects;
+
 public class Hero {
     private HeroType heroType;
     private int level;
@@ -43,5 +45,23 @@ public class Hero {
 
     public void setPoints(int points) {
         this.points = points;
+    }
+
+    public int compareTo(Hero other) {
+        return this.name.compareTo(other.name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Hero that = (Hero) o;
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        int prime = 73;
+        return Objects.hash(name) * 73;
     }
 }

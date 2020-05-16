@@ -41,6 +41,10 @@ public class Star {
         this.luminosity = luminosity;
     }
 
+    public int compareTo(Star other) {
+        return Integer.compare(this.id, other.getId());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
