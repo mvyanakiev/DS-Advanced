@@ -1,25 +1,30 @@
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ShoppingCentre {
-    private Map<String, List<Product>> productsByProducer;
+public class oldShoppingCentre_v2 {
+    private Set<Product> products;
+    private Map<String, HashSet<Product>> productsByProducer;
 
-    public ShoppingCentre() {
+    public oldShoppingCentre_v2() {
+        this.products = new HashSet<>();
         this.productsByProducer = new HashMap<>();
     }
 
     public String addProduct(String name, double price, String producer) {
         Product product = new Product(name, price, producer);
 
-        this.productsByProducer.putIfAbsent(producer, new ArrayList<>());
-        this.productsByProducer.get(producer).add(product);
+        if (this.products.add(product)) {
+            this.productsByProducer.putIfAbsent(producer, new HashSet<>());
+            this.productsByProducer.get(producer).add(product);
 
-        return "Product added" + System.lineSeparator();
-
+            return "Product added" + System.lineSeparator();
+        } else {
+            return "";
+        }
     }
 
     public String delete(String name, String producer) {
-        int size = this.productsByProducer.size();
+        int size = this.products.size();
         int newSIze = 0;
 
         if (this.productsByProducer.containsKey(producer)) {
@@ -28,8 +33,11 @@ public class ShoppingCentre {
                     .filter(product -> product.getName().equals(name))
                     .collect(Collectors.toList());
 
+            if (!removeByProducer.isEmpty()) {
+                this.products.removeAll(removeByProducer);
+            }
 
-            newSIze = size - this.productsByProducer.size();
+            newSIze = size - this.products.size();
         }
 
         if (newSIze > 0) {
@@ -41,10 +49,11 @@ public class ShoppingCentre {
 
     public String delete(String producer) {
 
-        List<Product> removeByProducer = this.productsByProducer.remove(producer);
+        HashSet<Product> removeByProducer = this.productsByProducer.remove(producer);
         int size = removeByProducer.size();
 
         if (size > 0) {
+            this.products.removeAll(removeByProducer);
             return size + " products deleted" + System.lineSeparator();
         }
         return "No products found" + System.lineSeparator();
@@ -53,19 +62,16 @@ public class ShoppingCentre {
     public String findProductsByName(String name) {
         StringBuilder sb = new StringBuilder();
 
-        if (!this.productsByProducer.isEmpty()) {
-
-            for (List<Product> list : productsByProducer.values()) {
-
-                list.stream()
-                        .filter(product -> product.getName().equals(name))
-                        .sorted(Comparator.comparing(Product::getName)
-                                .thenComparing(Product::getProducer)
-                                .thenComparing(Product::getPrice))
-                        .forEach(product -> {
-                            sb.append(product.toString()).append(System.lineSeparator());
-                        });
-            }
+        if (!this.products.isEmpty()) {
+            this.products
+                    .stream()
+                    .filter(product -> product.getName().equals(name))
+                    .sorted(Comparator.comparing(Product::getName)
+                            .thenComparing(Product::getProducer)
+                            .thenComparing(Product::getPrice))
+                    .forEach(product -> {
+                        sb.append(product.toString()).append(System.lineSeparator());
+                    });
         }
 
         String toReturn = sb.toString();
@@ -95,22 +101,16 @@ public class ShoppingCentre {
     public String findProductsByPriceRange(double priceFrom, double priceTo) {
         StringBuilder sb = new StringBuilder();
 
-        if (!this.productsByProducer.isEmpty()) {
-
-
-            for (List<Product> list : productsByProducer.values()) {
-
-                list.stream()
-                        .filter(p -> p.getPrice() >= priceFrom && p.getPrice() <= priceTo)
-                        .sorted(Comparator.comparing(Product::getName)
-                                .thenComparing(Product::getProducer)
-                                .thenComparing(Product::getPrice))
-                        .forEach(product -> {
-                            sb.append(product.toString()).append(System.lineSeparator());
-                        });
-            }
+        if (!this.products.isEmpty()) {
+            this.products.stream()
+                    .filter(p -> p.getPrice() >= priceFrom && p.getPrice() <= priceTo)
+                    .sorted(Comparator.comparing(Product::getName)
+                            .thenComparing(Product::getProducer)
+                            .thenComparing(Product::getPrice))
+                    .forEach(product -> {
+                        sb.append(product.toString()).append(System.lineSeparator());
+                    });
         }
-
         String toReturn = sb.toString();
 
         return getStringToReturn(toReturn);

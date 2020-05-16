@@ -79,6 +79,6 @@ public class Product implements Comparable<Product> {
                 .append(df.format(this.getPrice()))
                 .append("}");
 
-        return sb.toString().trim();
+        return sb.toString();
     }
 }
