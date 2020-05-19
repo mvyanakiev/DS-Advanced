@@ -8,12 +8,16 @@ import java.util.stream.Collectors;
 
 public class HeroDatabaseImpl implements HeroDatabase {
     private Map<String, Hero> heroes;
-    private Map<HeroType, List<Hero>> heroesByType;
+    private Map<HeroType, Set<Hero>> heroesByType;
+    private Set<Hero> allHeroes;
 
 
     public HeroDatabaseImpl() {
         this.heroes = new HashMap<>();
         this.heroesByType = new HashMap<>();
+        this.allHeroes = new TreeSet<>(Comparator.comparing(Hero::getLevel)
+                .reversed()
+                .thenComparing(Hero::getName));
     }
 
     @Override
@@ -23,8 +27,10 @@ public class HeroDatabaseImpl implements HeroDatabase {
         }
 
         this.heroes.put(hero.getName(), hero);
-        this.heroesByType.putIfAbsent(hero.getHeroType(), new ArrayList<>());
+        this.heroesByType.putIfAbsent(hero.getHeroType(),
+                new TreeSet<>(Comparator.comparing(Hero::getName)));
         this.heroesByType.get(hero.getHeroType()).add(hero);
+        this.allHeroes.add(hero);
     }
 
     @Override
@@ -50,19 +56,21 @@ public class HeroDatabaseImpl implements HeroDatabase {
         Hero toRemove = this.getHero(name);
 
         this.heroesByType.remove(toRemove.getHeroType());
+        this.allHeroes.remove(toRemove);
         return this.heroes.remove(toRemove.getName());
     }
 
     @Override
     public Iterable<Hero> removeAllByType(HeroType type) {
-        List<Hero> result = new ArrayList<>();
+        Set<Hero> result = new HashSet<>();
 
         if (this.heroesByType.containsKey(type)) {
             result = this.heroesByType.remove(type);
 
-            if (result.size() > 0) {
+            if (result != null) {
                 for (Hero hero : result) {
                     this.heroes.remove(hero.getName());
+                    this.allHeroes.remove(hero);
                 }
             }
         }
@@ -77,9 +85,11 @@ public class HeroDatabaseImpl implements HeroDatabase {
         int newLevel = toIncrease.getLevel() + 1;
         toIncrease.setLevel(newLevel);
 
-        this.heroes.put(toIncrease.getName(), toIncrease);
-        this.heroesByType.get(toIncrease.getHeroType()).remove(toIncrease);
-        this.heroesByType.get(toIncrease.getHeroType()).add(toIncrease);
+
+//        not!
+//        this.heroesByName.put(toIncrease.getName(), toIncrease);
+//        this.heroesByType.get(toIncrease.getHeroType()).remove(toIncrease);
+//        this.heroesByType.get(toIncrease.getHeroType()).add(toIncrease);
     }
 
     @Override
@@ -91,20 +101,16 @@ public class HeroDatabaseImpl implements HeroDatabase {
         Hero toRename = this.heroes.remove(oldName);
 
         toRename.setName(newName);
-        this.addHero(toRename);
+//        this.addHero(toRename); not!
+        this.heroes.put(newName, toRename);
     }
 
     @Override
     public Iterable<Hero> getAllByType(HeroType type) {
 
-        List<Hero> result = new ArrayList<>();
+        Set<Hero> result = this.heroesByType.get(type);
 
-        result = this.heroesByType.get(type)
-                .stream()
-                .sorted(Comparator.comparing(Hero::getName))
-                .collect(Collectors.toList());
-
-        if (result.size() > 0) {
+        if (result != null) {
             return result;
         } else {
             return new ArrayList<>();
@@ -113,13 +119,11 @@ public class HeroDatabaseImpl implements HeroDatabase {
 
     @Override
     public Iterable<Hero> getAllByLevel(int level) {
-        List<Hero> result = new ArrayList<>();
 
-        result = this.heroes.values().stream()
+        List<Hero> result = this.heroes.values().stream()
                 .filter(hero -> hero.getLevel() == level)
                 .sorted(Comparator.comparing(Hero::getName))
                 .collect(Collectors.toList());
-
 
         if (result.size() > 0) {
             return result;
@@ -130,20 +134,13 @@ public class HeroDatabaseImpl implements HeroDatabase {
 
     @Override
     public Iterable<Hero> getInPointsRange(int lowerBound, int upperBound) {
-        List<Hero> result = new ArrayList<>();
+//        List<Hero> result = new ArrayList<>();
 
-        result = this.heroes.values()
+        List<Hero> result = this.heroes.values()
                 .stream()
                 .filter(hero -> hero.getPoints() >= lowerBound && hero.getPoints() < upperBound)
-                .sorted((l,r) ->{
-                    int subPoints = Integer.compare(r.getPoints(), l.getPoints());
-
-                    if (subPoints == 0){
-                        return Integer.compare(l.getLevel(), r.getLevel());
-                    } else {
-                        return subPoints;
-                    }
-                })
+                .sorted(Comparator.comparingInt(Hero::getPoints).reversed()
+                        .thenComparing(Hero::getLevel))
                 .collect(Collectors.toList());
 
         if (result.size() > 0) {
@@ -155,25 +152,6 @@ public class HeroDatabaseImpl implements HeroDatabase {
 
     @Override
     public Iterable<Hero> getAllOrderedByLevelDescendingThenByName() {
-        List<Hero> result = new ArrayList<>();
-
-        result = this.heroes.values()
-                .stream()
-                .sorted((l,r) ->{
-                    int levelCompare = Integer.compare(r.getLevel(), l.getLevel());
-
-                    if (levelCompare == 0){
-                        return l.getName().compareTo(r.getName());
-                    } else {
-                        return levelCompare;
-                    }
-                })
-                .collect(Collectors.toList());
-
-        if (result.size() > 0) {
-            return result;
-        } else {
-            return new ArrayList<>();
-        }
+        return this.allHeroes;
     }
 }

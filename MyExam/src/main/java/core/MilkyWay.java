@@ -7,198 +7,157 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MilkyWay implements Galaxy {
-    private Map<Integer, Star> stars;
-    private Map<Integer, Planet> planets;
-    private Map<Star, List<Planet>> all;
+    private Map<Star, Set<Planet>> planetsByStars;
+    private Map<Integer, Star> starsByIds;
+    private Map<Integer, Planet> planetsByIds;
+    private Set<Star> stars;
 
     public MilkyWay() {
-        this.all = new HashMap<>();
-        this.planets = new HashMap<>();
-        this.stars = new LinkedHashMap<>();
+        this.planetsByStars = new LinkedHashMap<>();
+        this.starsByIds = new HashMap<>();
+        this.planetsByIds = new HashMap<>();
+        this.stars = new TreeSet<>(Comparator
+                .comparingInt(Star::getLuminosity)
+                .reversed());
     }
 
     @Override
     public void add(Star star) {
-        if (this.stars.containsKey(star.getId())) {
+        if (this.planetsByStars.containsKey(star)) {
             throw new IllegalArgumentException();
         }
 
-        this.stars.put(star.getId(), star);
-        this.all.put(star, new ArrayList<>());
+        this.planetsByStars.put(star, new TreeSet<>(
+                Comparator.comparing(Planet::getDistanceFromStar)
+                        .thenComparing(Planet::getMass)));
+
+        this.starsByIds.put(star.getId(), star);
+        this.stars.add(star);
     }
 
     @Override
     public void add(Planet planet, Star star) {
-        if (!this.stars.containsKey(star.getId()) || this.planets.containsKey(planet.getId())) {
+        if (!this.planetsByStars.containsKey(star)) {
             throw new IllegalArgumentException();
         }
 
-        this.stars.put(star.getId(), star);
-        this.planets.put(planet.getId(), planet);
-        this.all.get(star).add(planet);
+        if (this.planetsByIds.containsKey(planet.getId())) {
+            throw new IllegalArgumentException();
+        }
+
+        this.planetsByStars.get(star).add(planet);
+        this.planetsByIds.put(planet.getId(), planet);
     }
 
     @Override
     public boolean contains(Planet planet) {
-        return this.planets.containsKey(planet.getId());
+        return this.planetsByIds.containsKey(planet.getId());
     }
 
     @Override
     public boolean contains(Star star) {
-        return this.stars.containsKey(star.getId());
+        return this.starsByIds.containsKey(star.getId());
     }
 
     @Override
     public Star getStar(int id) {
-        if (!this.stars.containsKey(id)) {
+        Star star = this.starsByIds.get(id);
+        if (star == null) {
             throw new IllegalArgumentException();
         }
-
-        return this.stars.get(id);
+        return star;
     }
 
     @Override
     public Planet getPlanet(int id) {
-        if (!this.planets.containsKey(id)) {
+        Planet planet = this.planetsByIds.get(id);
+        if (planet == null) {
             throw new IllegalArgumentException();
         }
-
-        return this.planets.get(id);
+        return planet;
     }
 
     @Override
     public Star removeStar(int id) {
-        Star starToRemove = this.getStar(id);
-        List<Planet> planetsToRemove = this.all.get(starToRemove);
+        Star star = getStar(id);
+        
+        Set<Planet> remove = this.planetsByStars.remove(star);
 
-
-        if (!planetsToRemove.isEmpty()) {
-            for (Planet planet : planetsToRemove) {
-                this.planets.remove(planet.getId());
-            }
+        for (Planet planet : remove) {
+            this.planetsByIds.remove(planet.getId());
         }
 
-        this.stars.remove(id);
-        this.all.remove(starToRemove);
+        this.starsByIds.remove(star.getId());
+        this.stars.remove(star);
 
-
-        return starToRemove;
+        return star;
     }
 
     @Override
     public Planet removePlanet(int id) {
-        if (!this.planets.containsKey(id)) {
-            throw new IllegalArgumentException();
-        }
+        Planet planet = getPlanet(id);
 
-        Planet toRemove = this.planets.remove(id);
+        this.planetsByIds.remove(id);
 
-        for (List<Planet> planetList : all.values()) {
-
-            if (planetList.contains(toRemove)) {
-                planetList.remove(toRemove);
+        for (Set<Planet> value : planetsByStars.values()) {
+            if (value.removeIf(p -> p.getId() == id)) {
                 break;
             }
         }
 
-        return toRemove;
+        return planet;
     }
 
     @Override
     public int countObjects() {
-        return this.stars.size() + this.planets.size();
+        return this.starsByIds.size() +
+                this.planetsByIds.size();
     }
 
     @Override
     public Iterable<Planet> getPlanetsByStar(Star star) {
-        List<Planet> result = new ArrayList<>();
-
-        result = this.all.get(star).stream()
-                .sorted(Comparator.comparing(Planet::getDistanceFromStar)
-                        .thenComparing(Planet::getMass))
-                .collect(Collectors.toList());
-
-
-        if (result.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return result;
+        Set<Planet> planets = this.planetsByStars.get(star);
+        if (planets == null) {
+            return new HashSet<>();
         }
+        return planets;
     }
 
     @Override
     public Iterable<Star> getStars() {
-        List<Star> result = new ArrayList<>();
-
-        result = this.stars.values().stream()
-                .sorted(Comparator.comparing(Star::getLuminosity).reversed())
-                .collect(Collectors.toList());
-
-        if (result.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return result;
-        }
+        return this.stars;
     }
 
     @Override
     public Iterable<Star> getStarsInOrderOfDiscovery() {
-        List<Star> result = new ArrayList<>();
-
-        result = new ArrayList<>(this.stars.values());
-
-        if (result.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return result;
-        }
+        return this.planetsByStars.keySet();
     }
 
     @Override
     public Iterable<Planet> getAllPlanetsByMass() {
-        List<Planet> result = new ArrayList<>();
 
-        result = this.planets.values().stream()
+        return this.planetsByIds
+                .values()
+                .stream()
                 .sorted(Comparator.comparing(Planet::getMass).reversed())
                 .collect(Collectors.toList());
-
-        if (result.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return result;
-        }
     }
 
     @Override
     public Iterable<Planet> getAllPlanetsByDistanceFromStar(Star star) {
-        List<Planet> result = new ArrayList<>();
+        Set<Planet> planets = this.planetsByStars.get(star);
 
+        if (planets == null) {
+            return new HashSet<>();
+        }
 
-        result = this.all.get(star).stream()
+        return planets.stream()
                 .sorted(Comparator.comparing(Planet::getDistanceFromStar))
                 .collect(Collectors.toList());
-
-        if (result.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return result;
-        }
     }
 
     @Override
     public Map<Star, Set<Planet>> getStarsAndPlanetsByOrderOfStarDiscoveryAndPlanetDistanceFromStarThenByPlanetMass() {
-
-
-        Map<Star, Set<Planet>> result = new TreeMap<>();
-
-        for (Map.Entry<Star, List<Planet>> entry : all.entrySet()) {
-
-            Set<Planet> planets1 = entry.getValue().stream().sorted(Comparator.comparing(Planet::getDistanceFromStar)
-                    .thenComparing(Planet::getMass))
-                    .collect(Collectors.toSet());
-
-            result.putIfAbsent(entry.getKey(), planets1);
-        }
-        return result;
+        return this.planetsByStars;
     }
 }

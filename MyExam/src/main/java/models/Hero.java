@@ -61,7 +61,6 @@ public class Hero {
 
     @Override
     public int hashCode() {
-        int prime = 73;
         return Objects.hash(name) * 73;
     }
 }
