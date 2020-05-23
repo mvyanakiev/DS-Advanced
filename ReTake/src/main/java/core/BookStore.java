@@ -3,6 +3,8 @@ package core;
 import models.Book;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 public interface BookStore {
     void add(Book book);

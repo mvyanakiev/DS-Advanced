@@ -1,5 +1,7 @@
 package models;
 
+import java.util.Objects;
+
 public class Book {
     private String key;
     private String author;
@@ -57,5 +59,22 @@ public class Book {
 
     public void setPriceCents(int priceCents) {
         this.priceCents = priceCents;
+    }
+
+    public int compareTo(Book other) {
+        return this.key.compareTo(other.key);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Book that = (Book) o;
+        return Objects.equals(key, that.key);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key, author, title, priceCents) * 73;
     }
 }

@@ -1,13 +1,14 @@
 package models;
 
 import java.util.Date;
+import java.util.Objects;
 
 public class Car {
     private long id;
     private long bestLastTime;
     private int horsePower;
     private int lapsCount;
-    private Date  joinedOn;
+    private Date joinedOn;
 
     public Car(long id, long bestLastTime, int horsePower, int lapsCount, Date joinedOn) {
         this.id = id;
@@ -56,4 +57,23 @@ public class Car {
     public void setJoinedOn(Date joinedOn) {
         this.joinedOn = joinedOn;
     }
+
+
+    public int compareTo(Car other) {
+        return Long.compare(this.id, other.getId());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Car that = (Car) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, lapsCount) * 73;
+    }
 }
+
